@@ -86,25 +86,39 @@ app.post("/todos", function(req, res) {
 
 app.delete("/todos/:id", function(req, res) {
     var todoId = parseInt(req.params.id, 10);
-    var matchedTodo = _.findWhere(todos, {id: todoId});
+    var where = { where: { id: todoId } };
     
-    if(!matchedTodo) {
-        res.status(404).send({"error": "no todo found with that id"});
-    } else {
-        todos = _.without(todos, matchedTodo);
-        res.json(matchedTodo);
-    }
+    
+    db.todo.destroy(where).then(function(todo) {
+        if(todo) {
+            res.json("Todo: " + todoId + " -> succesfully deleted from the list");
+        } else {
+            res.status(404).json({"error": "No todo with id"});
+        }
+    }, function(error) {
+        res.status(500).send(error);
+    })
+    // var matchedTodo = _.findWhere(todos, {id: todoId});
+    // 
+    // if(!matchedTodo) {
+    //     res.status(404).send({"error": "no todo found with that id"});
+    // } else {
+    //     todos = _.without(todos, matchedTodo);
+    //     res.json(matchedTodo);
+    // }
 })
 
 app.put("/todos/:id", function(req, res) {
     var todoId = parseInt(req.params.id);
-    var matchedTodo = _.findWhere(todos, {id: todoId});
     var body = _.pick(req.body, "description", "completed");
     var validAttributes = {};
     
-    if(!matchedTodo) {
-        return res.status(404).send({"error": "no todo found with that id"});
-    }
+    db.todo.findById(todoId).then(function(todo) {
+        if(!todo) {
+            return res.status(404).json({"error": "no todo found with that id"});
+        }
+    });
+    
     
     if(body.hasOwnProperty("completed") && _.isBoolean(body.completed)) {
         validAttributes.completed = body.completed;
@@ -118,8 +132,12 @@ app.put("/todos/:id", function(req, res) {
         return res.status(400).send();
     }
     
-    _.extend(matchedTodo, validAttributes);
-    res.json(validAttributes);
+    db.todo.update(validAttributes, { where: todoId }).then(function(todos) {
+        res.json({"success": "Todo is succesfully updated!"});
+    })
+    
+    // _.extend(matchedTodo, validAttributes);
+    // res.json(validAttributes);
 })
 
 db.sequelize.sync().then(function() {
