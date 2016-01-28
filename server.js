@@ -14,6 +14,8 @@ app.get("/", function(req, res) {
     res.send("Todo API Root");
 })
 
+//  TODOS /////////////////////////////////////////////////////////////////////////
+
 app.get("/todos", function(req, res) {
     var queryParams = req.query;
     // var filterdTodos = todos;
@@ -70,7 +72,6 @@ app.post("/todos", function(req, res) {
     // if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
     //     return res.status(400).send();
     // }
-    body.description = body.description.trim(); 
     
     db.todo.create(body).then(function(todo) {
         res.json(todo.toJSON());
@@ -161,6 +162,43 @@ app.put("/todos/:id", function(req, res) {
     // _.extend(matchedTodo, validAttributes);
     // res.json(validAttributes);
 })
+
+//  USERS /////////////////////////////////////////////////////////
+
+app.post("/users", function(req, res) {
+    var body = _.pick(req.body, "email", "password");
+    console.log(body);
+    
+    db.user.create(body).then(function(user) {
+        res.json(user.toJSON());
+    }, function(error) {
+        res.status(400).json(error);
+    })
+});
+
+app.post("/users/login", function(req, res) {
+    var body = _.pick(req.body, "email", "password");
+    
+    if(typeof body.email === "string" && typeof body.password === "string") {
+        db.user.findOne({where: {
+            email: body.email,
+            password: body.password
+        }}).then(function(user) {
+            console.log(user);
+            if(!!user) {
+                res.json(user.toJSON()2);
+            } else {
+                res.status(401).send();
+            }
+        }, function(error) {
+            res.status(500).send();
+        })
+        // res.json(body);
+    } else {
+        return res.status(400).send();
+    }
+    
+});
 
 db.sequelize.sync().then(function() {
     app.listen(port, function() {
