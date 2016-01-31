@@ -178,26 +178,11 @@ app.post("/users", function(req, res) {
 
 app.post("/users/login", function(req, res) {
     var body = _.pick(req.body, "email", "password");
-    
-    if(typeof body.email === "string" && typeof body.password === "string") {
-        db.user.findOne({where: {
-            email: body.email,
-            password: body.password
-        }}).then(function(user) {
-            console.log(user);
-            if(!!user) {
-                res.json(user.toJSON()2);
-            } else {
-                res.status(401).send();
-            }
-        }, function(error) {
-            res.status(500).send();
-        })
-        // res.json(body);
-    } else {
-        return res.status(400).send();
-    }
-    
+    db.user.authenticate(body).then(function(user) {
+        res.json(user.toJSON());
+    }, function() {
+        res.status(401).send();
+    });
 });
 
 db.sequelize.sync().then(function() {

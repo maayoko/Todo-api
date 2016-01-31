@@ -2,7 +2,7 @@
 // var _ = require("underscore");
 
 module.exports = function(sequelize, DataTypes) {
-    return sequelize.define("user", {
+    var user = sequelize.define("user", {
         email : {
             type: DataTypes.STRING,
             allowNull: false,
@@ -40,6 +40,32 @@ module.exports = function(sequelize, DataTypes) {
                     user.email = user.email.toLowerCase();
                 }
             }
+        },
+        
+        classMethods: {
+            authenticate: function(body) {
+                return new Promise(function(resolve, reject) {
+                    if(typeof body.email === "string" && typeof body.password === "string") {
+                        user.findOne({where: {
+                            email: body.email,
+                            password: body.password
+                        }}).then(function(user) {
+                            if(!!user) {
+                               resolve(user);
+                            } else {
+                               reject();
+                            }
+                        }, function(error) {
+                            reject();
+                        })
+                        // res.json(body);
+                    } else {
+                        reject();
+                    }
+                });
+            }
         }
     });
+    
+    return user;
 };
